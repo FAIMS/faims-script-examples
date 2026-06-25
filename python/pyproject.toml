@@ -1,0 +1,8 @@
+[project]
+name = "faims-script-examples-python"
+version = "0.1.0"
+description = "Python demos for the FAIMS3 REST APIs"
+requires-python = ">=3.12"
+dependencies = [
+    "python-dotenv>=1.2.2",
+]
