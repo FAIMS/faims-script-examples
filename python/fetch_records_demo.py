@@ -11,6 +11,7 @@ Examples:
   cp .env.example .env   # then edit with your values
   uv run fetch_records_demo.py
   uv run fetch_records_demo.py --limit 10 --record-id rec-abc123
+  uv run fetch_records_demo.py --all --limit 20
 """
 
 from __future__ import annotations
@@ -147,7 +148,15 @@ def main() -> None:
         "--record-id",
         help="Fetch a specific record; otherwise fetches the first listed record",
     )
+    parser.add_argument(
+        "--all",
+        action="store_true",
+        help="Fetch full data for every listed record (respects --limit)",
+    )
     args = parser.parse_args()
+
+    if args.all and args.record_id:
+        parser.error("--all and --record-id cannot be used together")
 
     if not args.token:
         sys.exit("Error: set FAIMS_LONG_LIVED_TOKEN in .env or pass --token")
@@ -172,11 +181,21 @@ def main() -> None:
             f"updated={rec['updated']}"
         )
 
-    record_id = args.record_id or (records[0]["recordId"] if records else None)
-    if not record_id:
+    if not records:
         print("\nNo records to fetch.")
         return
 
+    if args.all:
+        for i, rec in enumerate(records):
+            record_id = rec["recordId"]
+            if i:
+                print()
+            print(f"Fetching full data for {record_id}...")
+            record = client.get_record(args.project_id, record_id)
+            print(json.dumps(record, indent=2))
+        return
+
+    record_id = args.record_id or records[0]["recordId"]
     print(f"\nFetching full data for {record_id}...")
     record = client.get_record(args.project_id, record_id)
     print(json.dumps(record, indent=2))
